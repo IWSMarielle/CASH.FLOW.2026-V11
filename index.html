@@ -2,59 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Gyrus & IWS - LIVE CLOUD PORTAL V17.1</title>
+    <title>Gyrus & IWS - LIVE CLOUD PORTAL V17.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 20px; font-size: 16px; }
         .main-wrapper { max-width: 1750px; margin: 0 auto; }
-        
-        .sync-header { 
-            background: #1e293b; border: 2px solid #fbbf24; border-radius: 12px; 
-            padding: 15px 25px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .sync-header { background: #1e293b; border: 2px solid #fbbf24; border-radius: 12px; padding: 15px 25px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
         .status-on { color: #10b981; font-weight: 900; letter-spacing: 1px; }
-        
         .section-divider { width: 100%; text-align: center; margin: 40px 0 20px 0; border-bottom: 3px solid #fbbf24; line-height: 0.1em; }
         .section-divider span { background: #0f172a; padding: 0 20px; color: #fbbf24; font-weight: 900; text-transform: uppercase; font-size: 22px; }
-        
         .dual-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
-        
         .co-frame { background: #f8fafc; color: #1e293b; border-radius: 15px; padding: 25px; border-top: 8px solid #fbbf24; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
         .co-header { text-align: center; background: #1e293b; color: #fbbf24; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: 800; font-size: 20px; }
-        
         .cf-section { background: #fff; border: 2px solid #cbd5e1; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
-        
         input[type="text"].amt-input { width: 160px; padding: 10px; border: 2px solid #cbd5e1; border-radius: 6px; text-align: right; font-weight: 900; font-family: monospace; font-size: 18px; color: #0f172a; }
         input[type="text"].desc-input { flex: 1; padding: 10px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 15px; }
-        
         .res-box { margin-top: 10px; padding: 12px; border-radius: 8px; font-weight: 900; text-align: right; font-size: 17px; }
         .res-inflow { background: #dcfce7; color: #166534; border-left: 5px solid #10b981; }
         .res-outflow { background: #fee2e2; color: #991b1b; border-left: 5px solid #ef4444; }
         .res-grand { background: #1e293b; color: #fbbf24; text-align: center; border: 2px solid #fbbf24; padding: 20px; border-radius: 10px; font-size: 32px; font-family: monospace; }
-        
         .btn-add { background: #1e293b; color: #fbbf24; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .history-panel { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-top: 15px; max-height: 150px; overflow-y: auto; font-size: 13px; }
+        .history-panel { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-top: 15px; max-height: 200px; overflow-y: auto; font-size: 13px; }
+        .hist-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #ddd; background: white; margin-bottom: 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="main-wrapper">
     <div class="sync-header">
-        <div><span class="status-on">● LIVE CLOUD STORAGE</span></div>
-        <div style="font-size: 13px; opacity: 0.8;">GitHub Pages + Supabase Shared Database</div>
+        <div><span class="status-on">● LIVE CLOUD STORAGE ACTIVE</span></div>
+        <div style="font-size: 13px; opacity: 0.8;">Shared Database: Every change updates all devices.</div>
     </div>
 
     <div class="section-divider"><span>WEEKLY CASH FLOW</span></div>
-    <div class="dual-container" id="weekly_portals"></div>
+    <div id="weekly_portals" class="dual-container"></div>
 
     <div class="section-divider"><span>MONTHLY CASH FLOW</span></div>
-    <div class="dual-container" id="monthly_portals"></div>
+    <div id="monthly_portals" class="dual-container"></div>
 </div>
 
 <script>
-    // --- CLOUD CONFIGURATION ---
-    const SUPABASE_URL = 'https://nizxofvvevmtvymqivze.supabase.co'; // Your URL from dashboard
+    const SUPABASE_URL = 'https://nizxofvvevmtvymqivze.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_VKG0gzg572lTNPTn4dzTdA_Jhzbw0zD';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -69,28 +58,30 @@
             const pid = `${typeLabel}_${co.id}`;
             container.innerHTML += `
             <div class="co-frame">
-                <div class="co-header">${co.name}</div>
+                <div class="co-header">${co.name} (${typeLabel.toUpperCase()})</div>
                 <div class="cf-section">
                     <div class="cf-row"><label>PERIOD</label>
-                        <select id="${pid}_month" onchange="autoSave()">${months.map(m => `<option>${m}</option>`).join('')}</select>
-                        ${typeLabel === 'weekly' ? `<select id="${pid}_week" onchange="autoSave()"><option>Week 1</option><option>Week 2</option><option>Week 3</option><option>Week 4</option><option>Week 5</option></select>` : ''}
+                        <div style="display:flex; gap:5px;">
+                            <select id="${pid}_month" onchange="autoSave()">${months.map(m => `<option>${m}</option>`).join('')}</select>
+                            ${typeLabel === 'weekly' ? `<select id="${pid}_week" onchange="autoSave()"><option>Week 1</option><option>Week 2</option><option>Week 3</option><option>Week 4</option><option>Week 5</option></select>` : ''}
+                        </div>
                     </div>
                     <div class="cf-row"><label>CASH IN BANK</label><input type="text" id="${pid}_bank" class="amt-input" onblur="handleAmtBlur(this, '${pid}')"></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:15px; font-weight:800; font-size:12px;">ACCOUNTS RECEIVABLE <button class="btn-add" onclick="addRow('${pid}_ar_list','${pid}')">+</button></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:15px; font-weight:800; font-size:12px; color:#475569;">ACCOUNTS RECEIVABLE <button class="btn-add" onclick="addRow('${pid}_ar_list','${pid}')">+</button></div>
                     <div id="${pid}_ar_list"></div>
                     <div class="res-box res-inflow">TOTAL LIQUID: <span id="${pid}_res_bank">0.00</span></div>
                 </div>
                 <div class="cf-section">
                     <div class="cf-row"><label>OPEX</label><input type="text" id="${pid}_opex" class="amt-input" onblur="handleAmtBlur(this, '${pid}')"></div>
-                    ${typeLabel === 'monthly' ? `<div class="cf-row"><label style="color:#10b981">SAVINGS</label><input type="text" id="${pid}_savings" class="amt-input" onblur="handleAmtBlur(this, '${pid}')"></div>` : ''}
-                    <div style="margin-top:10px; font-weight:800; font-size:12px;">ACCOUNTS PAYABLE</div>
-                    <div style="font-size:11px; color:gray;">IMPORT <button class="btn-add" onclick="addRow('${pid}_ap_import','${pid}')">+</button></div><div id="${pid}_ap_import"></div>
-                    <div style="font-size:11px; color:gray;">TRADE <button class="btn-add" onclick="addRow('${pid}_ap_trade','${pid}')">+</button></div><div id="${pid}_ap_trade"></div>
-                    <div style="font-size:11px; color:gray;">NON-TRADE <button class="btn-add" onclick="addRow('${pid}_ap_nontrade','${pid}')">+</button></div><div id="${pid}_ap_nontrade"></div>
+                    ${typeLabel === 'monthly' ? `<div class="cf-row"><label style="color:#10b981">SAVINGS</label><input type="text" id="${pid}_savings" class="amt-input" onblur="handleAmtBlur(this, '${pid}')" style="border-color:#10b981"></div>` : ''}
+                    <div style="margin-top:10px; font-weight:800; font-size:12px; color:#475569; border-bottom:1px solid #eee; padding-bottom:5px;">ACCOUNTS PAYABLE</div>
+                    <div style="font-size:11px; font-weight:bold; margin-top:8px;">IMPORT <button class="btn-add" onclick="addRow('${pid}_ap_import','${pid}')">+</button></div><div id="${pid}_ap_import"></div>
+                    <div style="font-size:11px; font-weight:bold; margin-top:8px;">TRADE <button class="btn-add" onclick="addRow('${pid}_ap_trade','${pid}')">+</button></div><div id="${pid}_ap_trade"></div>
+                    <div style="font-size:11px; font-weight:bold; margin-top:8px;">NON-TRADE <button class="btn-add" onclick="addRow('${pid}_ap_nontrade','${pid}')">+</button></div><div id="${pid}_ap_nontrade"></div>
                     <div class="res-box res-outflow">TOTAL OBLIGATIONS: <span id="${pid}_res_cost">0.00</span></div>
                 </div>
                 <div class="res-grand" id="${pid}_res_grand">0.00</div>
-                <button style="width:100%; margin-top:10px; background:#10b981; color:white; border:none; padding:8px; cursor:pointer;" onclick="saveArchive('${pid}')">Archive Snapshot</button>
+                <button style="width:100%; margin-top:15px; background:#10b981; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="saveArchive('${pid}')">ARCHIVE CURRENT SNAPSHOT</button>
                 <div class="history-panel" id="${pid}_history_list"></div>
             </div>`;
         });
@@ -99,7 +90,8 @@
     function addRow(containerId, pid, name = "", val = "") {
         const div = document.createElement('div');
         div.className = 'cf-row';
-        div.innerHTML = `<input type="text" value="${name}" class="desc-input" onblur="autoSave()"><input type="text" value="${val}" class="amt-input sub-val" onblur="handleAmtBlur(this, '${pid}')"><button style="color:red; border:none; background:none; cursor:pointer;" onclick="this.parentElement.remove();calculatePortal('${pid}');autoSave();">×</button>`;
+        div.style.marginTop = "5px";
+        div.innerHTML = `<input type="text" value="${name}" class="desc-input" placeholder="..." onblur="autoSave()"><input type="text" value="${val}" class="amt-input sub-val" onblur="handleAmtBlur(this, '${pid}')"><button style="color:red; border:none; background:none; cursor:pointer; font-size:20px;" onclick="this.parentElement.remove();calculatePortal('${pid}');autoSave();">×</button>`;
         document.getElementById(containerId).appendChild(div);
     }
 
@@ -110,7 +102,8 @@
         let ap = 0; ['_ap_import', '_ap_trade', '_ap_nontrade'].forEach(s => { document.querySelectorAll(`#${pid}${s} .sub-val`).forEach(e => ap += parse(e.value)); });
         let bank = parse(document.getElementById(`${pid}_bank`).value);
         let opex = parse(document.getElementById(`${pid}_opex`).value);
-        let sav = document.getElementById(`${pid}_savings`) ? parse(document.getElementById(`${pid}_savings`).value) : 0;
+        let savEl = document.getElementById(`${pid}_savings`);
+        let sav = savEl ? parse(savEl.value) : 0;
         let liquid = bank + ar; let cost = opex + ap + sav;
         document.getElementById(`${pid}_res_bank`).innerText = f.format(liquid);
         document.getElementById(`${pid}_res_cost`).innerText = f.format(cost);
@@ -142,11 +135,15 @@
         if (data && data.content) {
             Object.keys(data.content).forEach(pid => {
                 const d = data.content[pid];
+                const frame = document.getElementById(`${pid}_month`);
+                if(!frame) return;
+                
                 document.getElementById(`${pid}_month`).value = d.month;
                 if(d.week && document.getElementById(`${pid}_week`)) document.getElementById(`${pid}_week`).value = d.week;
                 document.getElementById(`${pid}_bank`).value = d.bank;
                 document.getElementById(`${pid}_opex`).value = d.opex;
                 if(document.getElementById(`${pid}_savings`)) document.getElementById(`${pid}_savings`).value = d.savings;
+                
                 document.getElementById(`${pid}_ar_list`).innerHTML = "";
                 d.ar.forEach(r => addRow(`${pid}_ar_list`, pid, r.n, r.v));
                 document.getElementById(`${pid}_ap_import`).innerHTML = "";
@@ -155,10 +152,23 @@
                 d.ap_t.forEach(r => addRow(`${pid}_ap_trade`, pid, r.n, r.v));
                 document.getElementById(`${pid}_ap_nontrade`).innerHTML = "";
                 d.ap_n.forEach(r => addRow(`${pid}_ap_nontrade`, pid, r.n, r.v));
-                document.getElementById(`${pid}_history_list`).innerHTML = d.hist;
+                
+                document.getElementById(`${pid}_history_list`).innerHTML = d.hist || "";
                 calculatePortal(pid);
             });
         }
+    }
+
+    function saveArchive(pid) {
+        const month = document.getElementById(`${pid}_month`).value;
+        const week = document.getElementById(`${pid}_week`) ? document.getElementById(`${pid}_week`).value : "";
+        const grand = document.getElementById(`${pid}_res_grand`).innerText;
+        const list = document.getElementById(`${pid}_history_list`);
+        const item = document.createElement('div');
+        item.className = 'hist-item';
+        item.innerHTML = `<span><strong>${month} ${week}</strong>: ${grand}</span><button style="border:none; color:red; cursor:pointer;" onclick="this.parentElement.remove(); autoSave();">×</button>`;
+        list.prepend(item);
+        autoSave();
     }
 
     window.onload = async () => {
@@ -166,7 +176,6 @@
         createPortal('monthly_portals', 'monthly');
         await loadFromCloud();
         
-        // Listen for Realtime updates from other devices
         supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'cashflow_portal' }, payload => {
             loadFromCloud();
         }).subscribe();
